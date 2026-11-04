@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuis Interaktif - Latihan Soal Festival Vokasi Satu Hati</title>
+    <title>Kuis Interaktif - Soal Latihan Festival Vokasi Satu Hati</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .option-label { transition: all 0.2s ease-in-out; }
@@ -17,10 +17,10 @@
         <!-- Start Screen -->
         <div id="start-screen" class="bg-white rounded-xl shadow-lg p-8 text-center mt-10">
             <img src="https://raw.githubusercontent.com/tsm-stemsago/latihankontes/main/logo-tsm-387x400.png.png" onerror="this.src='https://placehold.co/400x400/eeeeee/333333?text=Logo+TSM'" alt="Logo TSM" class="h-28 mx-auto mb-6 object-contain">
-            <h1 class="text-3xl font-bold text-red-600 mb-4">Soal Latihan Tes Teori</h1>
-            <p class="text-gray-600 mb-8">Festival Vokasi Satu Hati 2027. Terdiri dari 100 soal pilihan ganda.</p>
+            <h1 class="text-3xl font-bold text-red-600 mb-4">Latihan Tes Teori</h1>
+            <p class="text-gray-600 mb-8">Persiapan Festival Vokasi Satu Hati</p>
             <button onclick="startQuiz()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
-                Mulai Kuis Sekarang
+                <span id="btn-start-text">Mulai Kuis Sekarang</span>
             </button>
         </div>
 
@@ -31,8 +31,13 @@
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex-1">
                     <div class="flex justify-between items-center mb-6 border-b pb-4">
                         <h2 class="text-xl font-bold text-gray-700">Soal <span id="current-question-num">1</span> dari 100</h2>
-                        <div class="text-sm font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
-                            Satu Hati.
+                        <div class="flex items-center gap-4">
+                            <div id="timer-display" class="text-lg font-bold text-red-600 bg-red-50 px-4 py-1 rounded-lg border border-red-200 shadow-sm">
+                                90:00
+                            </div>
+                            <div class="text-sm font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full hidden md:block">
+                                Soal Latihan
+                            </div>
                         </div>
                     </div>
                     
@@ -81,7 +86,7 @@
                     0
                 </div>
                 <p class="text-lg text-gray-500 font-medium" id="score-message"></p>
-                <button onclick="location.reload()" class="mt-6 bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition">
+                <button onclick="restartQuiz()" class="mt-6 bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition">
                     Ulangi Kuis
                 </button>
             </div>
@@ -725,6 +730,28 @@ E. Buku Harian Mekanik`;
         let userAnswers = new Array(100).fill(null);
         let currentIndex = 0;
 
+        // Timer settings
+        const TOTAL_TIME = 90 * 60; // 90 menit dalam detik
+        let timeLeft = TOTAL_TIME;
+        let timerInterval = null;
+
+        // Memuat state dari Session Storage
+        function loadState() {
+            const savedAnswers = sessionStorage.getItem('userAnswers');
+            const savedTime = sessionStorage.getItem('timeLeft');
+            const savedIndex = sessionStorage.getItem('currentIndex');
+
+            if (savedAnswers) userAnswers = JSON.parse(savedAnswers);
+            if (savedTime) timeLeft = parseInt(savedTime);
+            if (savedIndex) currentIndex = parseInt(savedIndex);
+
+            if (savedAnswers || savedTime || savedIndex) {
+                const btnText = document.getElementById('btn-start-text');
+                if(btnText) btnText.innerText = "Lanjutkan Kuis";
+            }
+        }
+        loadState();
+
         // Parser Soal
         function parseQuestions() {
             const lines = rawData.split('\n');
@@ -759,6 +786,33 @@ E. Buku Harian Mekanik`;
             document.getElementById('quiz-screen').classList.remove('hidden');
             initNavigation();
             renderQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    sessionStorage.setItem('timeLeft', timeLeft);
+                    updateTimerDisplay();
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Waktu pengerjaan telah habis! Jawaban Anda akan dikumpulkan secara otomatis.");
+                    submitQuiz(true); // true = auto submit
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
         function initNavigation() {
@@ -834,17 +888,20 @@ E. Buku Harian Mekanik`;
 
         function selectOption(optIndex) {
             userAnswers[currentIndex] = optIndex;
+            sessionStorage.setItem('userAnswers', JSON.stringify(userAnswers));
             renderQuestion(); // Re-render to show selected styling
         }
 
         function jumpToQuestion(index) {
             currentIndex = index;
+            sessionStorage.setItem('currentIndex', currentIndex);
             renderQuestion();
         }
 
         function nextQuestion() {
             if (currentIndex < questions.length - 1) {
                 currentIndex++;
+                sessionStorage.setItem('currentIndex', currentIndex);
                 renderQuestion();
             }
         }
@@ -852,17 +909,22 @@ E. Buku Harian Mekanik`;
         function prevQuestion() {
             if (currentIndex > 0) {
                 currentIndex--;
+                sessionStorage.setItem('currentIndex', currentIndex);
                 renderQuestion();
             }
         }
 
-        function submitQuiz() {
+        function submitQuiz(autoSubmit = false) {
             // Cek jika ada yang belum dijawab
-            const unanswered = userAnswers.filter(ans => ans === null).length;
-            if (unanswered > 0) {
-                const confirmSubmit = confirm(`Anda masih memiliki ${unanswered} soal yang belum dijawab. Yakin ingin mengumpulkan?`);
-                if (!confirmSubmit) return;
+            if (!autoSubmit) {
+                const unanswered = userAnswers.filter(ans => ans === null).length;
+                if (unanswered > 0) {
+                    const confirmSubmit = confirm(`Anda masih memiliki ${unanswered} soal yang belum dijawab. Yakin ingin mengumpulkan?`);
+                    if (!confirmSubmit) return;
+                }
             }
+
+            clearInterval(timerInterval); // Hentikan timer
 
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
@@ -914,6 +976,11 @@ E. Buku Harian Mekanik`;
                 `;
                 container.appendChild(item);
             });
+        }
+
+        function restartQuiz() {
+            sessionStorage.clear();
+            location.reload();
         }
     </script>
 </body>
