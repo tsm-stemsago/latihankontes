@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif - Tes Teori Vokasi Honda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .option-label { transition: all 0.2s ease-in-out; }
+        .option-label:hover { background-color: #f3f4f6; }
+        .selected-option { border-color: #ef4444 !important; background-color: #fee2e2 !important; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased min-h-screen">
+
+    <div id="app" class="max-w-3xl mx-auto p-4 py-8">
+        <!-- Start Screen -->
+        <div id="start-screen" class="bg-white rounded-xl shadow-lg p-8 text-center mt-10">
+            <img src="logo-tsm-387x400.png" onerror="this.src='https://placehold.co/400x400/eeeeee/333333?text=Logo+TSM'" alt="Logo TSM" class="h-28 mx-auto mb-6 object-contain">
+            <h1 class="text-3xl font-bold text-red-600 mb-4">Tes Teori Kontes Vokasi Satu Hati</h1>
+            <p class="text-gray-600 mb-8">Persiapan Kurikulum Modul Ajar Astra 2024. Terdiri dari 100 soal pilihan ganda.</p>
+            <button onclick="startQuiz()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
+                Mulai Kuis Sekarang
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="bg-white rounded-xl shadow-lg p-6 md:p-8 hidden">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-700">Soal <span id="current-question-num">1</span> dari 100</h2>
+                <div class="text-sm font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
+                    Satu Hati.
+                </div>
+            </div>
+            
+            <div id="question-text" class="text-lg mb-6 font-medium text-gray-800 leading-relaxed">
+                <!-- Question will appear here -->
+            </div>
+
+            <div id="options-container" class="space-y-3 mb-8">
+                <!-- Options will appear here -->
+            </div>
+
+            <div class="flex justify-between mt-8 border-t pt-4">
+                <button id="btn-prev" onclick="prevQuestion()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-lg transition disabled:opacity-50">
+                    Sebelumnya
+                </button>
+                <button id="btn-next" onclick="nextQuestion()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                    Selanjutnya
+                </button>
+                <button id="btn-submit" onclick="submitQuiz()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition hidden">
+                    Kumpulkan & Lihat Skor
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden mt-6">
+            <div class="bg-white rounded-xl shadow-lg p-8 text-center mb-6 border-t-8 border-red-600">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h2>
+                <p class="text-gray-600 mb-6">Berikut adalah skor akhir Anda:</p>
+                <div class="text-6xl font-extrabold text-red-600 mb-4" id="final-score">
+                    0
+                </div>
+                <p class="text-lg text-gray-500 font-medium" id="score-message"></p>
+                <button onclick="location.reload()" class="mt-6 bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition">
+                    Ulangi Kuis
+                </button>
+            </div>
+
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 px-2">Pembahasan & Kunci Jawaban</h3>
+            <div id="review-container" class="space-y-6">
+                <!-- Review items will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Soal Mentah
+        const rawData = `
+Bagian 1: Mentalitas Dasar, Frontliner, dan Manajemen Bengkel
+1. Salah satu fokus utama dalam mentalitas dasar mekanik Honda (One HEART Value) adalah siklus perbaikan terus-menerus yang dikenal dengan singkatan...
+A. Plan, Do, Check, Action
+B. Program, Drive, Control, Act
+C. Plan, Do, Control, Action
+D. Process, Do, Check, Act
+E. Plan, Drive, Check, Action
+2. Siapakah yang disebut sebagai "Frontliner" di sebuah bengkel resmi AHASS?
+A. Hanya Kepala Bengkel
+B. Semua staf yang bertugas di area gudang
+C. Orang yang langsung berhadapan atau berhubungan dengan pelanggan (konsumen)
+D. Mekanik yang bekerja di pit
+E. Staf kebersihan bengkel
+3. Jabatan di bengkel yang bertanggung jawab penuh terhadap pencapaian target bengkel, operasional, dan manajemen SDM adalah...
+A. Service Advisor
+B. Kepala Bengkel
+C. Kepala Mekanik
+D. Final Inspector
+E. Front Desk
+4. Kegiatan pemeriksaan akhir setelah motor selesai diservis sebelum diserahkan kembali kepada konsumen merupakan tugas dari...
+A. Front Desk
+B. Kepala Bengkel
+C. Service Advisor
+D. Final Inspector
+E. Mekanik Pit
+5. Untuk menjaga kenyamanan dan efisiensi bengkel, diterapkan budaya 5R. Huruf 'R' yang berarti menjaga area kerja agar selalu bersih dari kotoran adalah...
+A. Ringkas
+B. Rapi
+C. Resik
+D. Rawat
+E. Rajin
+6. Apa tujuan utama dari PDI (Pre-Delivery Inspection) pada sepeda motor baru?
+A. Menghitung harga jual motor
+B. Memastikan kendaraan baru siap dan aman dikendarai oleh pelanggan
+C. Menambah aksesoris modifikasi pada motor
+D. Menguji kecepatan maksimal kendaraan di jalan raya
+E. Memeriksa ketersediaan suku cadang di gudang
+7. Dalam struktur organisasi bengkel, pihak yang bertugas melakukan pencatatan suku cadang (spare part) dan inventory adalah bagian...
+A. Kepala Mekanik
+B. Admin & Finance / Part counter
+C. Final Inspector
+D. Service Advisor
+E. PIC Claim
+8. Membaca kebutuhan pelanggan dan menawarkan produk/jasa yang sesuai dengan fakta kerusakan kendaraan merupakan penerapan dari fokus...
+A. Fokus pada PDCA
+B. Fokus pada Konsumen
+C. Fokus pada Kerjasama tim
+D. Fokus pada Diri Sendiri
+E. Fokus pada Harga
+9. Pengetahuan wirausaha (kewirausahaan) bengkel penting bagi siswa lulusan SMK Mitra Binaan AHM agar...
+A. Bisa menjadi pembalap profesional
+B. Mampu membuka dan mengelola bisnis bengkel secara mandiri
+C. Bisa merakit sepeda motor dari nol
+D. Menjadi ahli modifikasi ekstrim
+E. Mampu bekerja di luar negeri saja
+10. Dalam manajemen bengkel, sumber penghasilan utama berasal dari...
+A. Penjualan kendaraan baru saja
+B. Jasa servis dan penjualan spare part
+C. Biaya parkir kendaraan konsumen
+D. Penjualan aksesoris pakaian
+E. Jasa cuci motor saja
+Bagian 2: Alat Ukur, Fastener, dan Cover Body
+11. Alat ukur presisi yang digunakan untuk mengukur celah kerenggangan klep (valve clearance) adalah...
+A. Vernier Caliper
+B. Dial Indicator
+C. Micrometer
+D. Feeler Gauge
+E. Torque Wrench
+12. Untuk mengencangkan baut atau mur pada bagian mesin sesuai dengan spesifikasi torsi pabrikan agar tidak merusak ulir, digunakan...
+A. Kunci Ring biasa
+B. Obeng Ketok
+C. Torque Wrench (Kunci Momen)
+D. Kunci T
+E. Kunci Inggris
+13. Vernier caliper (jangka sorong) dapat digunakan untuk mengukur tiga dimensi benda, kecuali...
+A. Diameter dalam
+B. Diameter luar
+C. Kedalaman
+D. Celah kerenggangan busi
+E. Ketebalan kampas rem
+14. Untuk mencegah kebocoran oli atau air pendingin di antara dua permukaan komponen mesin yang disatukan, komponen yang digunakan adalah...
+A. Ring piston
+B. Bearing
+C. Gasket
+D. Sealant sembarangan
+E. Baut L
+15. Apa yang dimaksud dengan "Pitch" pada sebuah baut?
+A. Panjang total baut
+B. Jarak antara dua puncak ulir yang berdekatan
+C. Diameter kepala baut
+D. Kedalaman ulir baut
+E. Kekerasan material baut
+16. Mengapa pelepasan dan pemasangan cover body berbahan plastik harus dilakukan dengan teknik yang benar?
+A. Agar warna cat tidak luntur
+B. Karena material plastik rawan pecah atau patah pada bagian pengaitnya
+C. Agar baut tidak berkarat
+D. Karena cover body plastik sangat berat
+E. Untuk menghindari konsleting listrik
+17. Saat membaca Multimeter analog untuk mengukur tegangan baterai 12 Volt DC, selektor harus diarahkan pada posisi...
+A. ACV 10
+B. DCV 50
+C. Ohm X1
+D. DCA 250
+E. ACV 250
+18. Alat ukur yang paling tepat untuk mengukur diameter luar pin piston dengan ketelitian hingga 0,01 mm adalah...
+A. Vernier Caliper
+B. Micrometer
+C. Dial Bore Gauge
+D. Feeler Gauge
+E. Mistar Baja
+19. Pada saat melepas komponen, baut atau mur yang sangat keras dan rawan selek dapat dilepas menggunakan...
+A. Kunci pas
+B. Obeng ketok (Impact driver)
+C. Tang kombinasi
+D. Kunci T yang dipukul palu besi
+E. Kunci inggris
+20. Common tools di bengkel AHASS merujuk pada...
+A. Peralatan diagnostik komputer (MCS)
+B. Alat ukur presisi digital
+C. Perkakas tangan umum seperti obeng, tang, dan kunci ring/pas
+D. Mesin dynotest
+E. Scanner injeksi
+Bagian 3: Engine, Pelumasan, dan Pendinginan Mesin
+21. Fungsi utama sistem pelumasan pada mesin sepeda motor adalah, kecuali...
+A. Mendinginkan suhu mesin
+B. Mengurangi gesekan antar komponen
+C. Mencegah keausan
+D. Mencegah karat pada komponen dalam
+E. Menambah tenaga pembakaran di ruang bakar
+22. Pemeriksaan dan pembersihan saringan oli (oil strainer) pada sepeda motor Honda secara berkala bertujuan untuk...
+A. Menambah kapasitas oli mesin
+B. Mencegah tersumbatnya jalur sirkulasi oli akibat kotoran
+C. Menurunkan suhu coolant
+D. Mengurangi konsumsi bahan bakar
+E. Meningkatkan rasio kompresi
+23. Generasi mesin terbaru Honda skuter matik yang menggunakan 4-Valve (4 katup) dan berkapasitas 160cc dikenal dengan teknologi...
+A. eSP+ (enhanced Smart Power Plus)
+B. SOHC 2-Valve
+C. DOHC 4-Valve
+D. PGM-FI Step 1
+E. VTEC
+24. Dampak negatif dari kerenggangan klep (valve clearance) yang terlalu rapat/kecil adalah...
+A. Suara mesin menjadi sangat kasar (ngelitik)
+B. Kompresi bisa bocor karena klep tidak menutup sempurna saat mesin panas
+C. Konsumsi oli menjadi lebih irit
+D. Akselerasi motor menjadi jauh lebih kencang
+E. Busi cepat kotor
+25. Penggantian cairan pendingin (coolant) pada sistem pendingin radiator harus dilakukan secara berkala. Apa fungsi utama thermostat pada sistem ini?
+A. Mengukur volume coolant di tabung reservoir
+B. Mendinginkan air sebelum masuk ke water jacket
+C. Membuka dan menutup aliran coolant menuju radiator untuk mempercepat pencapaian suhu kerja optimal mesin
+D. Memutar kipas radiator secara mekanis
+E. Menambah tekanan sirkulasi cairan pendingin
+26. Komponen utama pada bagian kepala silinder (Cylinder Head) sepeda motor 4-tak meliputi...
+A. Kruk as, stang piston, dan transmisi
+B. Noken as (Camshaft), klep (valve), dan rocker arm
+C. Pulley CVT dan V-Belt
+D. Karburator dan saringan udara
+E. Kopling ganda dan kampas kopling
+27. Putaran stasioner (idle) mesin yang tidak stabil pada motor PGM-FI dapat dipengaruhi oleh penumpukan kotoran pada komponen...
+A. Throttle body
+B. Knalpot
+C. Rantai roda
+D. Busi luar
+E. Kampas rem
+28. Pemeriksaan komponen Cam Chain Tensioner (tensioner rantai keteng) biasanya dilakukan ketika mesin mengalami gejala...
+A. Asap knalpot berwarna putih tebal
+B. Terdengar suara kasar (berisik) pada area silinder blok/head terutama saat stasioner
+C. Motor susah dihidupkan di pagi hari
+D. Bensin terasa boros
+E. Rem terasa blong
+29. Komponen pada ruang bakar yang berfungsi memampatkan campuran udara dan bahan bakar, serta menerima tekanan hasil pembakaran adalah...
+A. Connecting rod
+B. Crankshaft
+C. Piston
+D. Camshaft
+E. Valve
+30. Fungsi utama dari Ring Piston Kompresi adalah...
+A. Menyapu oli di dinding silinder
+B. Mencegah kebocoran kompresi dari ruang bakar menuju ruang engkol (crankcase)
+C. Menghubungkan piston dengan stang seher
+D. Menahan agar piston pin tidak lepas
+E. Mendinginkan suhu ruang bakar
+Bagian 4: Sistem Bahan Bakar (PGM-FI) dan Diagnosa
+31. Kepanjangan dari PGM-FI pada sistem injeksi sepeda motor Honda adalah...
+A. Programmed Fuel Ignition
+B. Programmed Fuel Injection
+C. Primary Gasoline Motor - Fuel Injection
+D. Programmed Fast Injection
+E. Performance Gas Motor - Fuel Injected
+32. Komponen sentral atau "otak" pengontrol utama dalam sistem PGM-FI yang mengatur jumlah bahan bakar dan waktu pengapian adalah...
+A. Fuel Pump
+B. Throttle Body
+C. Injector
+D. ECM (Engine Control Module)
+E. Sensor O2
+33. Pada saat lampu MIL (Malfunction Indicator Lamp) pada panelmeter berkedip 7 kali (7 kedipan pendek), ini menandakan adanya masalah pada sirkuit sensor...
+A. EOT/ECT (Engine Oil / Coolant Temperature)
+B. TP (Throttle Position)
+C. CKP (Crankshaft Position)
+D. Injector
+E. O2 Sensor
+34. Komponen sistem PGM-FI yang bertugas menyemprotkan kabut bahan bakar ke dalam saluran masuk (intake manifold) adalah...
+A. Spark plug (Busi)
+B. Fuel pump
+C. Injector
+D. Throttle body
+E. Intake valve
+35. Sensor TP (Throttle Position) berfungsi untuk memberikan informasi ke ECM mengenai...
+A. Suhu mesin
+B. Tekanan udara masuk
+C. Sudut bukaan katup gas
+D. Posisi kruk as
+E. Kadar oksigen di gas buang
+36. Pemeriksaan tekanan bahan bakar (Fuel Pump Pressure) pada motor PGM-FI Honda umumnya menunjukkan spesifikasi standar di kisaran...
+A. 100 kPa (14 psi)
+B. 150 kPa (21 psi)
+C. 294 kPa (43 psi)
+D. 500 kPa (72 psi)
+E. 50 kPa (7 psi)
+37. Bila saringan bahan bakar (fuel filter/strainer) di dalam tangki tersumbat kotoran parah, gejala yang paling terasa adalah...
+A. Rem menjadi tidak pakem
+B. Mesin brebet saat digas atau mati mendadak karena tekanan bahan bakar drop
+C. Knalpot menembak-nembak
+D. Lampu utama meredup
+E. Suara mesin menjadi kasar
+38. Tujuan dilakukannya Reset ECM pada sepeda motor PGM-FI adalah untuk...
+A. Menambah tenaga motor hingga 10%
+B. Mengembalikan data ECM ke memori standar pabrik dan menghapus memori kode kerusakan masa lalu
+C. Mengatur ulang jarak tempuh odometer ke 0 km
+D. Memperbesar semprotan bensin
+E. Mengubah sudut pengapian menjadi racing
+39. Sensor CKP (Crankshaft Position) pada sistem PGM-FI dan sistem pengapian berfungsi untuk mendeteksi...
+A. Sudut kemiringan kendaraan
+B. Putaran mesin dan posisi Titik Mati Atas (TMA) piston
+C. Suhu oli mesin
+D. Posisi throttle gas
+E. Kadar emisi gas buang
+40. Kedipan lampu MIL berjumlah 8 kali pendek menandakan kerusakan pada komponen...
+A. Sensor TP (Throttle Position)
+B. Sensor MAP (Manifold Absolute Pressure)
+C. Injektor
+D. Pompa bahan bakar
+E. Koil pengapian
+Bagian 5: Sasis, Kemudi, Suspensi, Rem, dan Roda
+41. Teknologi rangka inovatif generasi terbaru Honda yang dibuat menggunakan dua buah pelat baja yang di-press (Stamped Frame) dan dilas laser dikenal dengan nama...
+A. Diamond Frame
+B. Twin Spar Frame
+C. eSAF (enhanced Smart Architecture Frame)
+D. Tubular Trellis
+E. Backbone Frame
+42. Pemeriksaan sistem kemudi yang terasa berat atau kemudi membelok ke satu sisi biasanya menandakan adanya masalah pada komponen...
+A. Kampas rem depan
+B. Race steering kit (Komstir / Bearing kemudi atas bawah)
+C. Minyak rem habis
+D. Rantai roda kendor
+E. Velg belakang oleng
+43. Fungsi sistem Anti-lock Braking System (ABS) pada pengereman sepeda motor adalah...
+A. Mengerem roda depan dan belakang secara bersamaan dengan satu tuas
+B. Mencegah roda terkunci (slip) saat dilakukan pengereman mendadak atau di jalan licin
+C. Menghentikan mesin secara otomatis saat rem ditekan
+D. Menambah gaya cengkeram kampas rem ganda
+E. Mencegah roda belakang terangkat saat mengerem
+44. Pada sistem pengereman Combi Brake System (CBS) mekanis/kabel, saat tuas rem kiri (rem belakang) ditarik, maka...
+A. Rem belakang saja yang berfungsi
+B. Rem depan dan rem belakang berfungsi secara bersamaan dengan proporsi tertentu
+C. Mesin motor akan mati otomatis
+D. Lampu hazard akan menyala otomatis
+E. Rem ABS akan aktif
+45. Standar minyak rem hidrolik (brake fluid) yang umum digunakan pada sepeda motor Honda memiliki spesifikasi DOT...
+A. DOT 1 atau DOT 2
+B. DOT 3 atau DOT 4
+C. DOT 5 (Silicone based)
+D. Minyak hidrolik pelumas
+E. Oli mesin SAE 10W-30
+46. Indikator keausan kampas rem tromol dapat dilihat dengan cara...
+A. Membongkar roda dan menimbang berat kampas
+B. Memeriksa tanda panah indikator keausan pada panel rem yang sejajar dengan tanda referensi saat tuas rem ditekan penuh
+C. Mengukur ketebalan cakram rem
+D. Memutar roda sambil mendengarkan suaranya
+E. Mengukur jarak main bebas tuas rem
+47. Fungsi Side Stand Switch (Saklar standar samping) pada motor matik Honda adalah...
+A. Menyalakan lampu sein secara otomatis saat standar diturunkan
+B. Mencegah mesin dapat dihidupkan (atau mematikan mesin) saat standar samping dalam posisi turun
+C. Mengunci roda belakang saat parkir
+D. Menambah kestabilan saat motor berhenti
+E. Menjaga putaran stasioner tetap stabil
+48. Tanda keausan pada ban sepeda motor (Tread Wear Indicator / TWI) ditandai dengan...
+A. Ban menjadi bocor halus
+B. Retakan pada dinding ban
+C. Tonjolan kecil di dalam alur tapak ban yang apabila sudah rata dengan tapak ban berarti ban harus diganti
+D. Bunyi mendecit saat pengereman
+E. Ban menjadi keras seperti plastik
+49. Penyetelan kekenduran rantai roda (drive chain) pada motor sport/bebek normalnya memiliki jarak main bebas (slack) sekitar...
+A. 5 - 10 mm
+B. 25 - 35 mm (tergantung model motor, secara umum sekitar ukuran ini)
+C. 50 - 60 mm
+D. 0 - 5 mm
+E. Tidak boleh ada jarak main sama sekali
+50. Komponen pada peredam kejut (suspensi) depan tipe teleskopik yang berfungsi menahan agar oli sok tidak bocor ke atas tabung as adalah...
+A. Dust seal (Sil debu)
+B. Oil seal (Sil oli)
+C. Piston ring
+D. O-ring
+E. Snap ring
+Bagian 6: Sistem Pemindah Tenaga (CVT & Kopling)
+51. Komponen pada sistem V-Matic (CVT) yang berfungsi meneruskan putaran dari drive pulley (pulley depan) ke driven pulley (pulley belakang) adalah...
+A. Rantai
+B. Weight Roller
+C. Drive Belt (V-Belt)
+D. Kopling Sentrifugal
+E. Torque Cam
+52. Jika komponen Weight Roller pada CVT aus atau tidak rata bentuknya (peyang), gejala yang paling dirasakan oleh pengendara adalah...
+A. Motor tidak bisa distarter
+B. Akselerasi tidak mulus, terasa ndut-ndutan atau getaran pada putaran awal/menengah
+C. Rem menjadi kurang pakem
+D. Lampu utama meredup
+E. Top speed meningkat tajam
+53. Kapan jadwal penggantian V-Belt secara berkala (sesuai standar umum pemeliharaan Honda) agar terhindar dari putus di jalan?
+A. Setiap 8.000 km
+B. Setiap 12.000 km
+C. Setiap 24.000 km (tergantung pedoman buku servis)
+D. Setiap 40.000 km
+E. Hanya jika v-belt sudah berbunyi berdecit
+54. Fungsi sistem Kopling (Clutch) pada sepeda motor tipe manual/sport adalah...
+A. Menambah tenaga putaran mesin
+B. Memutuskan dan menghubungkan putaran dari poros engkol (crankshaft) ke transmisi
+C. Mendinginkan ruang transmisi
+D. Mengurangi konsumsi bahan bakar saat mesin mati
+E. Mengubah arus AC menjadi DC
+55. Fitur Assist & Slipper Clutch pada sepeda motor Honda sport (seperti CBR150R/CBR250RR) memiliki dua fungsi utama. Fungsi Slipper bekerja saat...
+A. Akselerasi mendadak untuk menambah tenaga
+B. Pengendara melakukan pengereman roda depan secara mendadak
+C. Deselerasi (penurunan gigi ekstrem) untuk mengurangi efek engine brake berlebih sehingga roda belakang tidak slip/terkunci
+D. Menghidupkan mesin di pagi hari
+E. Berhenti di lampu merah agar mesin tidak mati
+56. Penyetelan jarak main bebas (free play) tuas kopling mekanis (kabel) umumnya berkisar di angka...
+A. 1 - 2 mm
+B. 10 - 20 mm
+C. 30 - 40 mm
+D. Tidak perlu ada jarak main
+E. 50 - 60 mm
+57. Bagian dari transmisi otomatis CVT (V-Matic) yang mengembang akibat gaya sentrifugal untuk menekan mangkuk kopling (clutch outer) dan menggerakkan roda belakang adalah...
+A. Weight roller
+B. V-Belt
+C. Kampas Kopling Ganda (Centrifugal clutch shoe)
+D. Slide piece
+E. Movable drive face
+58. Apa yang terjadi jika pegas driven face (per CVT) dipasang yang jauh lebih keras dari spesifikasi standar tanpa ubahan komponen lain?
+A. V-Belt akan lebih cepat putus
+B. Akselerasi atas (top speed) akan selalu bertambah
+C. V-Belt sulit turun di pulley belakang sehingga akselerasi awal responsif namun top speed bisa tertahan/menurun
+D. Motor akan lebih irit bensin
+E. Suara mesin menjadi lebih halus
+59. Cairan/pelumas yang digunakan pada transmisi akhir (Final Gear/Gardan) skuter matik Honda berfungsi untuk...
+A. Melumasi V-Belt agar tidak putus
+B. Melumasi roller dan slide piece
+C. Melumasi gigi reduksi akhir (Final Reduction Gear) antara as CVT dan as roda
+D. Melumasi piston
+E. Mendinginkan kopling sentrifugal
+60. Untuk menjaga performa CVT V-Matic, area ruang CVT harus dijaga tetap kering. Jika terjadi kebocoran oil seal kruk as pada bagian CVT, maka V-Belt akan...
+A. Lebih awet karena terlumasi
+B. Selip (slip) akibat terkena oli mesin, menyebabkan motor kehilangan tenaga penggerak
+C. Menjadi lebih lentur dan kuat
+D. Menghasilkan top speed lebih tinggi
+E. Berfungsi seperti kopling basah
+Bagian 7: Kelistrikan Dasar dan Instrumen
+61. Simbol atau diagram listrik dalam BPR (Buku Pedoman Reparasi) digunakan untuk...
+A. Panduan menghias motor
+B. Memeriksa sistem kelistrikan, fungsi, dan mengidentifikasi rute kabel
+C. Mengukur tekanan ban
+D. Mengetahui ukuran dimensi panjang sasis
+E. Panduan mengecat cover body
+62. Pada standar sistem pengkodean kabel (wiring) Honda, kabel yang berwarna HIJAU (Green) secara umum berfungsi sebagai jalur...
+A. Positif Baterai (Arus DC 12V langsung)
+B. Massa / Ground (Negatif)
+C. Pulser / Pick up coil
+D. Sinyal lampu sein kanan
+E. Jalur penerangan utama (Lampu AC)
+63. Sistem pengisian (Charging System) pada sepeda motor berfungsi untuk...
+A. Mengisi udara pada ban
+B. Mensuplai arus listrik untuk mengisi ulang daya baterai (aki) dan menyalakan komponen kelistrikan saat mesin hidup
+C. Menambah volume bahan bakar di ruang pelampung
+D. Mengalirkan coolant ke radiator
+E. Mengisi memori pada ECM
+64. Komponen yang bertugas merubah arus bolak-balik (AC) dari stator ACG menjadi arus searah (DC) untuk mengisi baterai adalah...
+A. Ignition Coil
+B. ECM (Engine Control Module)
+C. Regulator / Rectifier (Kiprok)
+D. Relay Starter
+E. Flasher Relay
+65. Baterai (Aki) tipe Maintenance Free (MF) / VRLA yang umum digunakan pada motor Honda masa kini memiliki keunggulan, yaitu...
+A. Harus selalu ditambah air aki (aquades) setiap bulan
+B. Bebas perawatan cairan elektrolit, karena disegel dan tidak ada penguapan bebas
+C. Bisa digunakan meskipun tegangannya turun di bawah 5 Volt
+D. Lebih berat dan ukurannya jauh lebih besar
+E. Tidak bisa didaur ulang
+66. Sistem penerangan dengan teknologi LED (Light Emitting Diode) memberikan keuntungan berupa...
+A. Konsumsi daya listrik yang lebih tinggi sehingga aki cepat tekor
+B. Daya tahan lampu lebih singkat
+C. Cahaya lebih terang, konsumsi daya listrik lebih rendah, dan usia pakai lebih panjang
+D. Menghasilkan panas yang sangat tinggi melebihi bohlam halogen
+E. Membutuhkan ballast bertenaga tinggi seperti lampu HID
+67. Flasher pada rangkaian kelistrikan sepeda motor berfungsi untuk...
+A. Menyalakan lampu depan utama
+B. Mengontrol kedipan lampu sein (Turn Signal) secara berkala
+C. Mematikan mesin saat standar samping turun
+D. Memberikan percikan api ke busi
+E. Membunyikan klakson dengan lebih nyaring
+68. Pada bagian Panelmeter Digital Full LCD (seperti di CBR150R/PCX), indikator yang mengingatkan pengguna untuk mengganti oli mesin secara berkala disebut...
+A. MIL (Malfunction Indicator Lamp)
+B. Highbeam Indicator
+C. ABS Indicator
+D. Oil Change Indicator
+E. Immobilizer Indicator
+69. Saat memeriksa kebocoran arus kelistrikan (Current Leakage Test) menggunakan multimeter, multimeter harus dihubungkan secara...
+A. Paralel terhadap kutub positif baterai
+B. Paralel terhadap sistem pengisian
+C. Seri antara kabel negatif (massa) bodi yang dilepas dengan kutub negatif baterai
+D. Seri pada kabel busi
+E. Bebas di kutub mana saja
+70. Tegangan standar baterai MF (Maintenance Free) 12 Volt yang terisi penuh dan dalam kondisi baik saat mesin mati berada di kisaran...
+A. 10.5 V – 11.0 V
+B. 11.5 V – 12.0 V
+C. 12.4 V – 12.8 V (atau lebih)
+D. 14.5 V – 15.5 V
+E. 24.0 V
+Bagian 8: Pengapian, Starter ACG, Smart Key, dan Teknologi Terbaru
+71. Sistem pengapian (Ignition System) memiliki peran utama untuk...
+A. Mendinginkan ruang bakar
+B. Menghasilkan percikan bunga api listrik pada ujung elektroda busi di waktu yang tepat sebelum TMA kompresi
+C. Menyemprotkan kabut bahan bakar
+D. Memutarkan kruk as saat start pertama
+E. Mengatur campuran bensin dan udara
+72. Rangkaian dasar sistem Starter elektrik konvensional terdiri dari baterai, kunci kontak, saklar starter, relay starter, dan...
+A. Busi
+B. Motor starter dinamo
+C. Injektor
+D. Pompa bensin
+E. Throttle body
+73. Pada teknologi starter terbaru Honda (misal: Vario 125/150, PCX, BeAT), dinamo starter konvensional ditiadakan dan digantikan oleh...
+A. Kick starter otomatis
+B. Sistem ACG (Alternating Current Generator) Starter
+C. Sistem CVT elektronik
+D. Motor induksi 3 fasa tegangan tinggi
+E. Starter kompresor angin
+74. Keunggulan dari teknologi ACG Starter pada sepeda motor matik Honda adalah...
+A. Menghasilkan suara benturan gigi starter yang keras dan gagah
+B. Menghidupkan mesin dengan suara yang sangat halus tanpa mekanisme gigi persinggungan
+C. Menggunakan dinamo berukuran sangat besar
+D. Tidak memerlukan aki (baterai) sama sekali
+E. Hanya bisa digunakan saat mesin dalam keadaan panas
+75. Fitur Idling Stop System (ISS) yang terintegrasi dengan ACG Starter akan mematikan mesin secara otomatis apabila...
+A. Sepeda motor berhenti, stasioner lebih dari 3 detik, dan suhu mesin sudah mencapai kondisi kerja optimal
+B. Sepeda motor direm mendadak dengan kecepatan di atas 50 km/jam
+C. Sepeda motor melewati polisi tidur
+D. Saklar standar samping (side stand switch) diturunkan
+E. Kapasitas bensin di bawah indikator merah
+76. Sistem elektronik pintar yang memungkinkan sepeda motor dihidupkan tanpa menggunakan anak kunci mekanis konvensional dinamakan...
+A. Immobilizer Key
+B. Manual Shutter Key
+C. Honda Smart Key System
+D. PGM-FI Key
+E. Anti-theft Alarm System
+77. Salah satu keuntungan fitur Answer Back System pada remote Smart Key adalah...
+A. Dapat menyalakan mesin dari jarak 100 meter
+B. Memudahkan konsumen mencari posisi sepeda motornya di area parkir yang luas melalui bunyi buzzer dan kedipan sein
+C. Menambah kecepatan laju motor secara otomatis
+D. Membuka jok secara hidrolis
+E. Mencegah ban kempes
+78. Jika baterai (baterai kancing) pada remote Honda Smart Key habis (mati total), apa fitur darurat yang bisa dilakukan pengendara untuk menghidupkan motor?
+A. Menghubungkan kabel aki langsung ke koil
+B. Melakukan prosedur Emergency Start dengan memasukkan kode unik (ID Tag) bawaan Smart Key melalui knob kontak
+C. Memutar knob secara paksa dengan obeng minus
+D. Menekan tombol klakson 10 kali
+E. Motor tidak akan bisa dihidupkan sama sekali dan harus dibawa ke bengkel dengan ditarik
+79. Pada model Honda PCX Electric (EV), sumber penggerak utama sepeda motor bukan berasal dari mesin pembakaran dalam (ICE), melainkan dari...
+A. Bensin oktan tinggi
+B. Udara bertekanan
+C. Motor listrik (Electric Motor) kompak yang ditenagai oleh Honda Mobile Power Pack
+D. Tenaga surya langsung
+E. Reaktor nuklir mini
+80. Kendaraan berteknologi Hybrid (seperti Honda PCX e:HEV) menggunakan prinsip...
+A. Penggunaan bahan bakar bensin dan diesel secara bergantian
+B. Penggabungan Mesin Bensin konvensional (Internal Combustion Engine) dan Motor Listrik sebagai sumber tenaga untuk meningkatkan akselerasi dan efisiensi
+C. Berjalan murni hanya dengan listrik tanpa mesin bensin
+D. Berjalan dengan bahan bakar gas (CNG)
+E. Tidak memerlukan bahan bakar maupun listrik baterai
+Bagian 9: Perawatan Berkala, Diagnosa, dan Penanganan Trouble
+81. Pembersihan busi yang sudah menghitam (carbon fouling) dan penyetelan ulang celah (gap) busi merupakan bagian dari...
+A. Pemeriksaan dan pemeliharaan berkala
+B. Modifikasi performa (Tune up balap)
+C. Penggantian komponen berat (Turun mesin)
+D. PDI (Pre-Delivery Inspection)
+E. Proses klaim garansi cacat pabrik
+82. Apa yang harus dilakukan jika air cleaner (saringan udara) jenis kertas viskos (Viscous paper type) sudah sangat kotor oleh debu?
+A. Dicuci menggunakan air sabun dan dikeringkan
+B. Disemprot dengan udara bertekanan (kompresor) dari arah berlawanan
+C. Wajib diganti dengan yang baru, karena jenis viskos (basah oli) tidak boleh dibersihkan/disemprot
+D. Diolesi dengan oli mesin secara tebal agar kotoran menempel
+E. Dibakar bagian permukaannya secara perlahan
+83. Penyetelan putaran stasioner (idle) mesin karburator menggunakan metode...
+A. Penurunan putaran stasioner (Pilot Screw Adjustment) menggunakan tachometer
+B. Memutar baut klep sembarangan
+C. Menambah beban pada V-belt
+D. Mereset ECM dengan DLC short connector
+E. Mengganti injektor dengan ukuran yang lebih besar
+84. Alat ukur listrik Multimeter (Avometer) memiliki fungsi utama untuk mengukur...
+A. Torsi, panjang, dan tekanan
+B. Arus (Ampere), Tegangan (Voltase), dan Hambatan (Ohm/Resistansi)
+C. Suhu, Kelembaban, dan Massa
+D. Jarak renggang, ketebalan ban, dan volume silinder
+E. Kadar oksigen, CO, dan HC pada gas buang
+85. Pada sistem pendingin cairan, saat mesin mengalami panas berlebih (overheating) sehingga air di radiator memuai, cairan pendingin akan dialirkan menuju...
+A. Bak oli mesin
+B. Tangki bahan bakar
+C. Tangki cadangan (Reserve Tank / Reservoir)
+D. Ruang bakar
+E. Knalpot
+86. Dalam menganalisis kerusakan fuel system menggunakan BPR, tekanan bahan bakar (Fuel Pressure) diukur dengan menyambungkan Fuel Pressure Gauge di antara...
+A. Injector dan selang Intake manifold
+B. Pompa bahan bakar (Fuel Pump) dan selang penyalur ke Injektor
+C. Filter udara dan throttle body
+D. Tangki BBM dan karburator
+E. Blok silinder dan knalpot
+87. Indikator MIL berkedip dengan kode 52 menandakan adanya malfungsi pada bagian...
+A. Injektor
+B. Sensor CKP (Crankshaft Position)
+C. Busi (Spark Plug)
+D. Sensor kecepatan roda belakang atau sistem rem ABS
+E. Sensor EOT / ECT
+88. Untuk merangkai simulator sederhana kelistrikan sepeda motor di sekolah vokasi, komponen pengaman arus agar tidak terjadi korsleting (short circuit) yang merusak komponen adalah...
+A. Baterai
+B. Lampu
+C. Sekring (Fuse)
+D. Saklar
+E. Kabel Ground
+89. Prosedur pengoperasian SCS (Service Check Short) connector atau DLC (Data Link Connector) jumper pada motor PGM-FI digunakan untuk...
+A. Menghapus kode DTC historis pada ECM dan inisialisasi sensor TP
+B. Membuka kunci jok motor secara darurat
+C. Mem-bypass relay stater agar motor menyala tanpa aki
+D. Mematikan fitur ISS permanen
+E. Mengaktifkan lampu hazard
+90. Apabila brake pad (kampas rem cakram hidrolik) sudah aus mencapai batas alur indikator batas keausan, tindakan yang wajib dilakukan mekanik adalah...
+A. Melumasi kampas rem dengan oli
+B. Mengganti kampas rem (brake pad) dengan yang baru
+C. Membiarkannya sampai benar-benar habis berbunyi logam
+D. Mengisi tabung minyak rem hingga luber
+E. Mengampelas cakram (disc) hingga tipis
+Bagian 10: General Skill dan Kompetensi Lengkap
+91. Saat mekanik menerima Perintah Kerja (PKB/Work Order) dari SA, yang pertama kali harus dipastikan sebelum membongkar motor pelanggan adalah...
+A. Mencuci tangan dengan sabun
+B. Memasang pelindung bodi (Fender cover/seat cover) agar motor pelanggan tidak kotor atau tergores
+C. Langsung memutar mesin dengan gas penuh (geber)
+D. Meminta bayaran ke pelanggan
+E. Membeli suku cadang di toko luar
+92. Mengencangkan Baut Silinder Head (Kepala Silinder) pada mesin harus dilakukan dengan urutan...
+A. Melingkar searah jarum jam secara langsung dengan torsi maksimal
+B. Menyilang secara bertahap dalam dua atau tiga langkah dari dalam ke luar menggunakan kunci momen
+C. Dari pinggir kiri ke kanan secara berurutan
+D. Acak sesuai keinginan mekanik
+E. Hanya dikencangkan pakai tangan kosong
+93. Character Building untuk tenaga mekanik Honda (Satu Hati Vocational) bertujuan mencetak mekanik yang...
+A. Memiliki mentalitas sikap kerja unggul, disiplin, dan jujur terhadap pelanggan
+B. Berorientasi pada keuntungan pribadi sebesar-besarnya
+C. Hanya fokus pada kecepatan kerja mengabaikan standar BPR
+D. Berani memodifikasi mesin standar pabrik secara ekstrim tanpa persetujuan
+E. Bersikap masa bodoh terhadap komplain konsumen
+94. Pemeriksaan tinggi permukaan minyak oli (Oil Level) sepeda motor pada kondisi normal (tanpa dipstick yang diputar masuk) harus berada di antara...
+A. Garis batas bawah (Lower) dan batas sangat rendah
+B. Garis batas atas (Upper) dan batas bawah (Lower) pada tongkat celup oli (Dipstick) saat motor distandar tengah pada permukaan rata
+C. Melebihi garis batas atas (Upper) hingga meluber keluar lubang
+D. Tepat di bawah garis batas bawah (Lower)
+E. Tidak terlihat basah oli sama sekali
+95. Rantai penggerak camshaft (rantai keteng / cam chain) berfungsi mentransmisikan putaran dari...
+A. Roda belakang ke transmisi
+B. Camshaft ke klep
+C. Poros engkol (Crankshaft) ke Camshaft (Noken as) untuk mengatur bukaan klep
+D. Kipas pendingin ke poros engkol
+E. Dinamo starter ke magnet
+96. Pembersihan injektor (Injector Cleaner) yang paling tepat dan tidak merusak seal injektor menggunakan metode...
+A. Ditiup dengan kompresor udara tekanan tinggi
+B. Direndam dengan bensin selama semalaman
+C. Menggunakan cairan injector cleaner khusus atau mesin ultrasonic cleaner sesuai pedoman pabrikan
+D. Digosok dengan amplas kasar
+E. Disikat dengan sikat kawat
+97. Pada sistem pengapian DC-CDI konvensional, kapasitor di dalam CDI unit (Capacitor Discharge Ignition) akan melepaskan muatan listrik (discharge) bertegangan sekitar 200V-400V menuju ke...
+A. Ignition Coil (Koil Pengapian) untuk dinaikkan lagi tegangannya menjadi puluhan ribu volt
+B. Baterai (Aki)
+C. Lampu Sein
+D. Motor Starter
+E. Alternator stator
+98. Keuntungan utama menggunakan roda ban tipe Tubeless pada sepeda motor adalah...
+A. Harganya sangat murah dibandingkan ban tube type (berban dalam)
+B. Saat terkena paku kecil, angin tidak langsung habis secara drastis (kebocoran terjadi perlahan) sehingga lebih aman
+C. Tidak perlu diisi tekanan angin selamanya
+D. Tidak akan pernah bisa bocor walaupun sobek
+E. Lebih ringan karena tidak berbahan karet
+99. Sistem emisi gas buang pada beberapa tipe sepeda motor Honda dilengkapi dengan sistem Secondary Air Supply System (SASS/ PAIR), fungsinya adalah...
+A. Menyemprotkan bensin murni ke dalam knalpot agar keluar api
+B. Meniupkan udara bersih dari saringan udara masuk ke saluran buang (exhaust port) untuk membantu membakar sisa gas buang (CO dan HC) agar emisi lebih bersih
+C. Mendinginkan suhu leher knalpot
+D. Menambah tekanan udara ban secara otomatis
+E. Menyaring debu knalpot masuk ke mesin
+100. Bukti profesionalitas pelayanan dan kualitas kerja seorang teknisi standar pabrikan dapat dinilai jika semua pekerjaan dilakukan merujuk pada pedoman perbaikan resmi yang disebut...
+A. Buku Servis Konsumen
+B. Brosur Dealer
+C. BPR (Buku Pedoman Reparasi) / Workshop Manual
+D. Majalah Otomotif
+E. Buku Harian Mekanik`;
+
+        // Kunci Jawaban (0 = A, 1 = B, 2 = C, 3 = D, 4 = E)
+        const answerKey = [
+            0, 2, 1, 3, 2,  1, 1, 1, 1, 1,  // 1-10
+            3, 2, 3, 2, 1,  1, 1, 1, 1, 2,  // 11-20
+            4, 1, 0, 1, 2,  1, 0, 1, 2, 1,  // 21-30
+            1, 3, 0, 2, 2,  2, 1, 1, 1, 0,  // 31-40
+            2, 1, 1, 1, 1,  1, 1, 2, 1, 0,  // 41-50
+            2, 1, 2, 1, 2,  1, 2, 2, 2, 1,  // 51-60
+            1, 1, 1, 2, 1,  2, 1, 3, 2, 2,  // 61-70
+            1, 1, 1, 1, 0,  2, 1, 1, 2, 1,  // 71-80
+            0, 2, 0, 1, 2,  1, 1, 2, 0, 1,  // 81-90
+            1, 1, 0, 1, 2,  2, 0, 1, 1, 2   // 91-100
+        ];
+
+        let questions = [];
+        let userAnswers = new Array(100).fill(null);
+        let currentIndex = 0;
+
+        // Parser Soal
+        function parseQuestions() {
+            const lines = rawData.split('\n');
+            let currentQ = null;
+            
+            lines.forEach(line => {
+                const text = line.trim();
+                if (!text || text.startsWith('Bagian') || text.startsWith('Kunci')) return;
+                
+                // Cek jika baris adalah nomor soal (misal: "1. Salah satu...")
+                if (/^\d+\./.test(text)) {
+                    if (currentQ) questions.push(currentQ);
+                    currentQ = { text: text, options: [] };
+                } else if (/^[A-E]\./.test(text)) {
+                    // Cek jika baris adalah opsi jawaban (misal: "A. Plan...")
+                    if (currentQ) currentQ.options.push(text);
+                }
+            });
+            if (currentQ) questions.push(currentQ);
+
+            // Masukkan kunci jawaban
+            questions.forEach((q, i) => {
+                q.correctAnswer = answerKey[i];
+            });
+        }
+
+        // Initialize
+        parseQuestions();
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentIndex];
+            document.getElementById('current-question-num').innerText = currentIndex + 1;
+            document.getElementById('question-text').innerText = q.text;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, i) => {
+                const isSelected = userAnswers[currentIndex] === i;
+                const letter = String.fromCharCode(65 + i); // A, B, C, D, E
+
+                const label = document.createElement('label');
+                label.className = `option-label flex items-center p-4 border rounded-lg cursor-pointer ${isSelected ? 'selected-option' : 'border-gray-200'}`;
+                
+                label.innerHTML = `
+                    <input type="radio" name="option" value="${i}" class="h-5 w-5 text-red-600 focus:ring-red-500 mr-4" ${isSelected ? 'checked' : ''} onchange="selectOption(${i})">
+                    <span class="text-gray-700 font-medium">${optText}</span>
+                `;
+                optionsContainer.appendChild(label);
+            });
+
+            // Button states
+            document.getElementById('btn-prev').disabled = currentIndex === 0;
+            
+            if (currentIndex === questions.length - 1) {
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-submit').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-submit').classList.add('hidden');
+            }
+        }
+
+        function selectOption(optIndex) {
+            userAnswers[currentIndex] = optIndex;
+            renderQuestion(); // Re-render to show selected styling
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function submitQuiz() {
+            // Cek jika ada yang belum dijawab
+            const unanswered = userAnswers.filter(ans => ans === null).length;
+            if (unanswered > 0) {
+                const confirmSubmit = confirm(`Anda masih memiliki ${unanswered} soal yang belum dijawab. Yakin ingin mengumpulkan?`);
+                if (!confirmSubmit) return;
+            }
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            calculateScore();
+            renderReview();
+            window.scrollTo(0, 0);
+        }
+
+        function calculateScore() {
+            let correctCount = 0;
+            userAnswers.forEach((ans, i) => {
+                if (ans === questions[i].correctAnswer) correctCount++;
+            });
+            
+            // Skor maksimal 100 karena ada 100 soal
+            document.getElementById('final-score').innerText = correctCount;
+            
+            let message = "";
+            if (correctCount >= 85) message = "Luar biasa! Pengetahuan Anda sangat kompeten.";
+            else if (correctCount >= 70) message = "Bagus! Terus tingkatkan kemampuan teknis Anda.";
+            else message = "Tetap semangat! Anda perlu banyak mempelajari ulang BPR dan teori dasar.";
+            
+            document.getElementById('score-message').innerText = message;
+        }
+
+        function renderReview() {
+            const container = document.getElementById('review-container');
+            container.innerHTML = '';
+
+            questions.forEach((q, i) => {
+                const userAnswerIdx = userAnswers[i];
+                const correctIdx = q.correctAnswer;
+                const isCorrect = userAnswerIdx === correctIdx;
+                const answeredLetter = userAnswerIdx !== null ? String.fromCharCode(65 + userAnswerIdx) : '-';
+                const correctLetter = String.fromCharCode(65 + correctIdx);
+
+                const item = document.createElement('div');
+                item.className = `p-5 rounded-lg border-l-4 shadow-sm bg-white ${isCorrect ? 'border-green-500' : 'border-red-500'}`;
+                
+                item.innerHTML = `
+                    <div class="font-bold text-gray-800 mb-2">${q.text}</div>
+                    <div class="text-sm space-y-1 mt-3">
+                        <p class="${isCorrect ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">
+                            Jawaban Anda: ${answeredLetter} ${userAnswerIdx !== null ? '(' + q.options[userAnswerIdx] + ')' : '(Tidak dijawab)'}
+                        </p>
+                        ${!isCorrect ? `<p class="text-green-600 font-semibold">Kunci Jawaban: ${correctLetter} (${q.options[correctIdx]})</p>` : ''}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
