@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuis Interaktif - Soal Latihan Festival Vokasi Satu Hati</title>
+    <title>Kuis Interaktif - Latihan Tes Teori</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .option-label { transition: all 0.2s ease-in-out; }
@@ -17,8 +17,8 @@
         <!-- Start Screen -->
         <div id="start-screen" class="bg-white rounded-xl shadow-lg p-8 text-center mt-10">
             <img src="https://raw.githubusercontent.com/tsm-stemsago/latihankontes/main/logo-tsm-387x400.png.png" onerror="this.src='https://placehold.co/400x400/eeeeee/333333?text=Logo+TSM'" alt="Logo TSM" class="h-28 mx-auto mb-6 object-contain">
-            <h1 class="text-3xl font-bold text-red-600 mb-4">Latihan Tes Teori</h1>
-            <p class="text-gray-600 mb-8">Persiapan Festival Vokasi Satu Hati</p>
+            <h1 class="text-3xl font-bold text-red-600 mb-4">Latihan Tes Teori Festival Vokasi Satu Hati</h1>
+            <p class="text-gray-600 mb-8">Terdiri dari 100 soal pilihan ganda.</p>
             <button onclick="startQuiz()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
                 <span id="btn-start-text">Mulai Kuis Sekarang</span>
             </button>
@@ -31,7 +31,10 @@
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex-1">
                     <div class="flex justify-between items-center mb-6 border-b pb-4">
                         <h2 class="text-xl font-bold text-gray-700">Soal <span id="current-question-num">1</span> dari 100</h2>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 md:gap-4">
+                            <button onclick="confirmResetQuiz()" class="text-xs md:text-sm font-bold text-gray-700 bg-gray-200 hover:bg-red-600 hover:text-white px-3 py-1 rounded-lg transition shadow-sm" title="Reset semua progres">
+                                Reset Kuis
+                            </button>
                             <div id="timer-display" class="text-lg font-bold text-red-600 bg-red-50 px-4 py-1 rounded-lg border border-red-200 shadow-sm">
                                 90:00
                             </div>
@@ -976,6 +979,14 @@ E. Buku Harian Mekanik`;
                 `;
                 container.appendChild(item);
             });
+        }
+
+        function confirmResetQuiz() {
+            const isConfirmed = confirm("Yakin ingin mereset kuis? Seluruh waktu dan jawaban Anda akan terhapus dan kembali ke awal.");
+            if (isConfirmed) {
+                sessionStorage.clear();
+                location.reload();
+            }
         }
 
         function restartQuiz() {
