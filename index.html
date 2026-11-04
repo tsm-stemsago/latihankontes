@@ -984,12 +984,14 @@ E. Buku Harian Mekanik`;
         function confirmResetQuiz() {
             const isConfirmed = confirm("Yakin ingin mereset kuis? Seluruh waktu dan jawaban Anda akan terhapus dan kembali ke awal.");
             if (isConfirmed) {
+                clearInterval(timerInterval); // Hentikan timer terlebih dahulu agar tidak tersimpan ulang
                 sessionStorage.clear();
                 location.reload();
             }
         }
 
         function restartQuiz() {
+            clearInterval(timerInterval); // Hentikan timer
             sessionStorage.clear();
             location.reload();
         }
